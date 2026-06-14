@@ -45,7 +45,7 @@ public class Gob {
                 try {
                     runPrompt();
                 } catch (IOException e) {
-                    System.err.println("Waxaad ka qaybqaadan kartaa");
+                    System.err.println("Khalad Ayaa dhacay markii la akhrinayay qoraal-kaaga");
                     System.exit(64);
                 }
                 return;
