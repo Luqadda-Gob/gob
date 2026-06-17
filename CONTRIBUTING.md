@@ -143,11 +143,35 @@ generated `.class` files before committing.
 Native executable support should remain optional for contributors and users.
 The standard Maven JAR must continue to build and run with a regular OpenJDK.
 
+Windows produces two binaries from the same JAR:
+
+- `gob.exe` — console subsystem, used from the terminal and for the REPL
+- `gobw.exe` — Windows subsystem (no console window), used by the file
+  association so that double-clicking a `.gob` file does not cause a console
+  window to flash and close
+
+Build both on Windows after `mvn package`:
+
+```powershell
+$env:JAVA_HOME = "C:\Java\graalvm-jdk-21.0.11"   # adjust to your GraalVM path
+$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+
+New-Item -ItemType Directory -Force target/native
+
+native-image --no-fallback -jar target/gob-0.0.1.jar -o target/native/gob
+
+native-image --no-fallback `
+    -H:NativeLinkerOption=/SUBSYSTEM:WINDOWS `
+    -H:NativeLinkerOption=/ENTRY:mainCRTStartup `
+    -jar target/gob-0.0.1.jar -o target/native/gobw
+```
+
 If you change GraalVM Native Image packaging:
 
 - Document the required GraalVM version and platform tools.
 - Verify that normal `mvn test` and `mvn package` workflows still work.
-- Test the native executable on the target operating system.
+- Test both `gob.exe` and `gobw.exe` on Windows.
+- Verify the file association opens `.gob` files without a console blink.
 - Do not commit generated executables to the repository.
 
 Native executables are platform-specific, so Windows, Linux, and macOS builds
