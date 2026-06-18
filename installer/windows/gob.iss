@@ -39,16 +39,16 @@ SetupWindowTitle=Dejinta %1
 WelcomeLabel1=Kusoo dhawoow Gob
 WelcomeLabel2=Dejintu waxay ku daji doontaa [name] [ver] kombiyuutarkaaga.%n%nXidho barnaamijyada kale ka hor inta aadan sii wadin.
 LicenseLabel=Fadlan akhriso license-ka.
-LicenseLabel3=Fadlan akhriso license-ka.
-LicenseAccepted=Waxaan &aqbalayaa
-LicenseNotAccepted=&Kuma aqbalayo
+LicenseLabel3=Akhriso shuruudaha si aad u dejisato [name].
+LicenseAccepted=Waan &aqbalay
+LicenseNotAccepted=&Ma aqbalin
 SelectDirDesc=Xulo halka lagu dajinayo
 SelectDirLabel3=Fadlan xulo halka lagu dajinayo.
 SelectDirBrowseLabel=Si aad u sii wadato, riix Xiga. Haddaad rabto gal kale, riix Raadso.
 SelectTasksDesc=Xulo hawlaha dheeraadka ah
 SelectTasksLabel2=Xulo hawlaha dheeraadka ah, kadibna riix Xiga.
 ReadyLabel1=Diyaar
-ReadyLabel2a=Riix Deji si aad u sii wadato.
+ReadyLabel2a=Riix Deji si aad usii socoto.
 ReadyMemoTasks=Hawlaha dheeraadka ah:
 InstallingLabel=Lagu guda jiraa...
 FinishedHeadingLabel=Dhammaynta Dejinta [name]
@@ -68,12 +68,11 @@ UninstalledAll=%1 si guul leh ayaa looga saaray.
 UninstalledMost=Saarista %1 waa la dhammaystay. Qaar ka mid ah walxaha lama saari karin si toos ah.
 
 [Tasks]
-Name: "desktopicon"; Description: "Ku dar shortcut desktop-ka"; GroupDescription: "Shortcut-yo dheeraad ah:"; Flags: unchecked
-Name: "fileassociation"; Description: "Fur .gob faylasha Gob"; GroupDescription: "Faylasha:"
+Name: "desktopicon"; Description: "Ku dar shortcut-ka Gob Desktop-ka"; GroupDescription: "Shortcut-yo dheeraad ah:"; Flags: unchecked
+Name: "fileassociation"; Description: "Ku fur files-ka ku dhamaada .gob"; GroupDescription: "Faylasha:"
 
 [Files]
 Source: "..\..\target\native\gob.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\target\native\gobw.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\assets\windows\gob.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
@@ -86,7 +85,7 @@ Name: "{autodesktop}\Gob Prompt"; Filename: "{app}\{#MyAppExeName}"; Parameters:
 Root: HKCU; Subkey: "Software\Classes\.gob"; ValueType: string; ValueName: ""; ValueData: "Gob.Source"; Flags: uninsdeletevalue; Tasks: fileassociation
 Root: HKCU; Subkey: "Software\Classes\Gob.Source"; ValueType: string; ValueName: ""; ValueData: "Gob source file"; Flags: uninsdeletekey; Tasks: fileassociation
 Root: HKCU; Subkey: "Software\Classes\Gob.Source\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\gob.ico"; Tasks: fileassociation
-Root: HKCU; Subkey: "Software\Classes\Gob.Source\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\gobw.exe"" --file ""%1"""; Tasks: fileassociation
+Root: HKCU; Subkey: "Software\Classes\Gob.Source\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" --file ""%1"""; Tasks: fileassociation
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Parameters: "--qor"; Description: "Fur Gob"; Flags: nowait postinstall skipifsilent unchecked

@@ -59,10 +59,6 @@ jobs:
       - name: Build native executable
         run: native-image --no-fallback -jar target/gob.jar -o target/native/gob
 
-      - name: Build windowless executable (Windows only)
-        if: runner.os == 'Windows'
-        run: native-image --no-fallback -H:NativeLinkerOption=/SUBSYSTEM:WINDOWS -H:NativeLinkerOption=/ENTRY:mainCRTStartup -jar target/gob.jar -o target/native/gobw
-
       - name: Add logo to Windows executable
         if: runner.os == 'Windows'
         shell: pwsh
@@ -90,7 +86,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force target\dist | Out-Null
-          Copy-Item target\native\gob.exe, target\native\gobw.exe, assets\windows\gob.ico, README.md, LICENSE target\dist\
+          Copy-Item target\native\gob.exe, assets\windows\gob.ico, README.md, LICENSE target\dist\
           Compress-Archive -Path target\dist\* -DestinationPath target\gob-windows-x64.zip
 
       - name: Upload native package

@@ -110,13 +110,8 @@ mvn test
 
 ## Native executable-yada iyo Windows installer-ka
 
-Windows-ka waxaa la abuuraa laba executable:
-
-- `gob.exe` — barnaamijka caadiga ah oo terminal-ka looga isticmaalo
-- `gobw.exe` — nooca aan console lahayn; kani wuxuu u shaqeeyaa marka `.gob`
-  faylasha laga furo File Explorer si aanay dhibaatada "terminal blinks" u dhicin
-
-Windows setup-ku wuxuu kugu caawinaya lasoo daga `gob.exe` iyo `gobw.exe`,
+Windows setup-ku waa wizard ku rakiba `gob.exe`, wuxuu abuuri karaa desktop
+shortcut, wuxuuna `.gob` faylasha ku xiri karaa Gob.
 
 Si aad faylashan ugu daabacdo GitHub Release, marka hore hubi in nooca ku jira
 `pom.xml` uu sax yahay. Kadib samee oo dir tag:
@@ -145,21 +140,12 @@ $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 native-image --version
 ```
 
-Marka `native-image --version` shaqeeyo, dhis JAR-ka iyo labada executable:
+Marka `native-image --version` shaqeeyo, dhis JAR-ka iyo executable-ka:
 
 ```powershell
 mvn clean package
-
 New-Item -ItemType Directory -Force target/native
-
-# gob.exe — barnaamijka caadiga ah
 native-image --no-fallback -jar target/gob-0.0.1.jar -o target/native/gob
-
-# gobw.exe — nooca aan console lahayn (loogu talagalay file associations)
-native-image --no-fallback `
-    -H:NativeLinkerOption=/SUBSYSTEM:WINDOWS `
-    -H:NativeLinkerOption=/ENTRY:mainCRTStartup `
-    -jar target/gob-0.0.1.jar -o target/native/gobw
 ```
 
 Si aad Windows setup wizard-ka ugu dhisto kombiyuutarkaaga, marka hore lasoo dag

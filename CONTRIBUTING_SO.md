@@ -147,34 +147,20 @@ Taageerada executable-ka native-ka ah waa inay ahaato ikhtiyaari. JAR-ka
 caadiga ah ee Maven waa inuu ku sii dhismi karaa kuna sii shaqayn karaa
 OpenJDK-ga caadiga ah.
 
-Windows-ka, JAR-ka keliya ayaa laga dhisaa laba executable:
-
-- `gob.exe` — barnaamijka caadiga ah oo terminal-ka looga isticmaalo
-- `gobw.exe` — nooca aan console lahayn; kani wuxuu u shaqeeyaa marka `.gob`
-  faylasha laga furo File Explorer si aanay dhibaatada "terminal blinks" u dhicin
-
-Labadaba ku dhis Windows-ka kadib `mvn package`:
+Ku dhis executable-ka Windows-ka kadib `mvn package`:
 
 ```powershell
 $env:JAVA_HOME = "C:\Java\graalvm-jdk-21.0.11"   # wadada GraalVM-kaaga wax ka beddel
 $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
-
 New-Item -ItemType Directory -Force target/native
-
 native-image --no-fallback -jar target/gob-0.0.1.jar -o target/native/gob
-
-native-image --no-fallback `
-    -H:NativeLinkerOption=/SUBSYSTEM:WINDOWS `
-    -H:NativeLinkerOption=/ENTRY:mainCRTStartup `
-    -jar target/gob-0.0.1.jar -o target/native/gobw
 ```
 
 Haddii aad wax ka beddelayso samaynta GraalVM Native Image:
 
 - Qor nooca GraalVM iyo qalabka operating system-ka ee loo baahan yahay.
 - Hubi in `mvn test` iyo `mvn package` ay wali si caadi ah u shaqaynayaan.
-- Ku tijaabi labada `gob.exe` iyo `gobw.exe` Windows-ka.
-- Xaqiijiyo in file association-ku si sax ah u furo `.gob` faylasha.
+- Ku tijaabi `gob.exe` Windows-ka, oo ay ku jirto laba-gujinta fayl `.gob` ah.
 - Ha ku darin executable-yada la abuuray repository-ga.
 
 Executable-yada native-ka ah waxay ku xiran yihiin operating system-ka.
