@@ -1,0 +1,178 @@
+name: Native release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: Build ${{ matrix.platform }} native executable
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            asset: target/gob-linux-x64.tar.gz
+          - os: windows-latest
+            platform: windows
+            asset: target/gob-windows-x64.zip
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: "21"
+          distribution: graalvm-community
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: maven
+          native-image-job-reports: "true"
+
+      - name: Set up Node.js for Windows branding
+        if: runner.os == 'Windows'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Build JAR and run tests
+        run: mvn --batch-mode clean package
+
+      - name: Prepare native build input
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force target/native | Out-Null
+          $jar = Get-ChildItem target -Filter "gob-*.jar" | Select-Object -First 1
+          if (-not $jar) {
+            throw "Gob JAR was not created."
+          }
+          Copy-Item $jar.FullName target/gob.jar
+
+      - name: Build native executable
+        run: native-image --no-fallback -jar target/gob.jar -o target/native/gob
+
+      - name: Build windowless executable (Windows only)
+        if: runner.os == 'Windows'
+        run: native-image --no-fallback -H:NativeLinkerOption=/SUBSYSTEM:WINDOWS -H:NativeLinkerOption=/ENTRY:mainCRTStartup -jar target/gob.jar -o target/native/gobw
+
+      - name: Add logo to Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          npm install --prefix target\rcedit --no-save rcedit@5.0.2
+          node --input-type=module -e "import { rcedit } from './target/rcedit/node_modules/rcedit/lib/index.js'; await rcedit('target/native/gob.exe', { icon: 'assets/windows/gob.ico' });"
+
+      - name: Test Linux executable
+        if: runner.os == 'Linux'
+        run: target/native/gob --caawi
+
+      - name: Test Windows executable
+        if: runner.os == 'Windows'
+        run: target\native\gob.exe --caawi
+
+      - name: Package Linux executable
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p target/dist
+          cp target/native/gob README.md LICENSE target/dist/
+          tar -czf target/gob-linux-x64.tar.gz -C target/dist .
+
+      - name: Package Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force target\dist | Out-Null
+          Copy-Item target\native\gob.exe, target\native\gobw.exe, assets\windows\gob.ico, README.md, LICENSE target\dist\
+          Compress-Archive -Path target\dist\* -DestinationPath target\gob-windows-x64.zip
+
+      - name: Upload native package
+        uses: actions/upload-artifact@v7
+        with:
+          name: gob-${{ matrix.platform }}-x64
+          path: ${{ matrix.asset }}
+          if-no-files-found: error
+
+  windows-installer:
+    name: Build Windows installer
+    needs: native
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Download Windows native package
+        uses: actions/download-artifact@v8
+        with:
+          name: gob-windows-x64
+          path: target/package
+
+      - name: Extract Windows executable
+        shell: pwsh
+        run: |
+          Expand-Archive target\package\gob-windows-x64.zip -DestinationPath target\native
+
+      - name: Install Inno Setup if missing
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup --yes --no-progress
+          }
+
+      - name: Build setup wizard
+        shell: pwsh
+        run: |
+          [xml]$pom = Get-Content pom.xml
+          $version = $pom.project.version
+          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            throw "Inno Setup compiler was not found at $iscc"
+          }
+          & $iscc "/DMyAppVersion=$version" "installer\windows\gob.iss"
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v7
+        with:
+          name: gob-windows-installer
+          path: target/installer/*.exe
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - native
+      - windows-installer
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release assets
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release-assets/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release-assets/* --generate-notes --verify-tag
+          fi

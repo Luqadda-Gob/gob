@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -26,7 +25,7 @@ public class Gob {
         for (var i = 0; i < args.length; i++) {
 
             if (args[i].equals("--file") || args[i].equals("-f")) {
-                String arg = args[++i].replace("\\\\", "/");
+                String arg = args[++i];
                 try {
                     runFile(arg);
                 } catch (IOException e) {
@@ -62,10 +61,21 @@ public class Gob {
         }
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
+        if (launchedFromExplorer()) {
+            System.out.print("\nGuji Enter si aad u xidho...");
+            System.in.read();
+        }
         if (hasError)
             System.exit(65);
         if (hasRuntimeError)
             System.exit(70);
+    }
+
+    private static boolean launchedFromExplorer() {
+        return ProcessHandle.current().parent()
+                .flatMap(p -> p.info().command())
+                .map(cmd -> cmd.toLowerCase().endsWith("explorer.exe"))
+                .orElse(false);
     }
 
     private static void runPrompt() throws IOException {
@@ -105,12 +115,13 @@ public class Gob {
                 }
             }
             errors.clear();
-            System.out.println(Errors+ "\n");
+            System.out.println(Errors + "\n");
             if (Objects.nonNull(res)) {
                 System.out.println(res.trim());
             }
         }
-        if (Objects.nonNull(res)) System.out.println(res);
+        if (Objects.nonNull(res))
+            System.out.println(res);
     }
 
     static void error(int line, String message) {
